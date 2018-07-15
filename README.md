@@ -156,6 +156,10 @@ protected void btnGenPDFRepeatHorizontal_Click(object sender, EventArgs e)
 ### 參考資料
 
 [透過 Aspose 將 datatable 的資料轉出成有浮水印的 PDF 檔](https://rainmakerho.github.io/2018/07/03/2018022/)
+
 [Setting Page Options](https://docs.aspose.com/display/cellsnet/Setting+Page+Options)
+
 [Setting Headers and Footers](https://docs.aspose.com/display/cellsnet/Setting+Headers+and+Footers)
+
 [Aspose Stamps-Watermarks](https://github.com/aspose-pdf/Aspose.PDF-for-.NET/tree/master/Examples/CSharp/AsposePDF/Stamps-Watermarks)
+

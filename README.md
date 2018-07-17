@@ -38,27 +38,30 @@
 
 _註: 因為共用的 function 都是回傳 Stream，所以這們可以將做好的 PDF 檔放到 Byte Array 之中，再透過 Response.BinaryWrite 傳給使用者下載檔案 ^\_^_
 
-1.ColumnName 換行，IsTextWrapped = true, 設定寬度為 5，右表頭加入 2 列(換行)，浮水印蓋滿一頁。
+1.ColumnName 換行，IsTextWrapped = true, 設定寬度為 5，右表頭加入 2 列(換行)，設定日期格式，第一列表頭對齊方式為置中，浮水印蓋滿一頁。
 
 ```csharp
 protected void btnGenPDFFitPage_Click(object sender, EventArgs e)
 {
+
 	var excelArg = new ExportDataTable2ExcelArg
 	{
 		dataSource = GetDataSource(),
 		HeaderCenter = "&24 This is Report Header ...",
 		HeaderRight = $"&10 使用者:Rainmaker\r日期:{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}",
 		FooterRight = "&10 &P/&N",
-		ColumnInfos = new Dictionary<string, Tuple<string, double>>
+		ColumnInfos = new Dictionary<string, Tuple<string, double, Aspose.Cells.Style>>
 		{
-			{"ProductID", new Tuple<string, double>($"產品\n代號", 5) },
-			{"ProductName", new Tuple<string, double>("產品名稱" , -1)},
-			{"ProductDesc", new Tuple<string, double>("產品 \n描述" , -1)},
-			{"Units", new Tuple<string, double>("產品 庫存" , -1) }
+			{"ProductID", new Tuple<string, double, Aspose.Cells.Style>($"產品\n代號", 5, null) },
+			{"ProductName", new Tuple<string, double, Aspose.Cells.Style>("產品名稱" , -1, null) },
+			{"ProductDesc", new Tuple<string, double, Aspose.Cells.Style>("產品 \n描述" , -1,null) },
+			{"Units", new Tuple<string, double, Aspose.Cells.Style>("產品 庫存" , -1, new Aspose.Cells.Style{  HorizontalAlignment= TextAlignmentType.Center})},
+			 {"CreDte", new Tuple<string, double, Aspose.Cells.Style>("日期" , 20, new Aspose.Cells.Style{ Number=22, Custom = "yyyy/mm/dd hh:mm:ss" , HorizontalAlignment= TextAlignmentType.Center}) }
 		},
 		PageOrientation = PageOrientationType.Landscape,
 		IsTextWrapped = true,
-
+		PageScale = 80,
+		HeaderHorizontalAlignment = TextAlignmentType.Center
 	};
 	var pdfStream = GenPDFFromDataTable(excelArg);
 	var fileNameWithoutExt = $"{Guid.NewGuid().ToString("N")}";
@@ -94,7 +97,7 @@ protected void btnGenPDFFitPage_Click(object sender, EventArgs e)
 產生出來的 PDF 如下圖，
 ![浮水印蓋滿一頁的PDF](https://github.com/rainmakerho/asposeExcel2PDF/blob/master/onePage.png)
 
-2.ColumnName 自動調整，IsTextWrapped = false，列印比例設定為 90，右表頭加入 2 列(換行)，Cell 字型設定為 "Microsoft JhengHei Light"(請檢查 Windows\fonts 中是否有該字型)，浮水印水平蓋滿一頁，旋轉角度 30 度。
+2.ColumnName 自動調整，IsTextWrapped = false，列印比例設定為 90，右表頭加入 2 列(換行)，Cell 字型設定為 "標楷體"(請檢查 Windows\fonts 中是否有該字型)，浮水印水平蓋滿一頁，旋轉角度 30 度。
 
 ```csharp
 protected void btnGenPDFRepeatHorizontal_Click(object sender, EventArgs e)
@@ -105,17 +108,19 @@ protected void btnGenPDFRepeatHorizontal_Click(object sender, EventArgs e)
 		HeaderCenter = "&24 This is Report Header ...",
 		HeaderRight = $"&12 使用者:Rainmaker\r日期:{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}",
 		FooterRight = "&10 &P/&N",
-		ColumnInfos = new Dictionary<string, Tuple<string, double>>
+		ColumnInfos = new Dictionary<string, Tuple<string, double, Aspose.Cells.Style>>
 		{
-			{"ProductID", new Tuple<string, double>($"產品代號", -1) },
-			{"ProductName", new Tuple<string, double>("產品名稱" , -1)},
-			{"ProductDesc", new Tuple<string, double>("產品描述" , -1)},
-			{"Units", new Tuple<string, double>("產品 庫存" , -1) }
+			{"ProductID", new Tuple<string, double, Aspose.Cells.Style>($"產品代號", -1, null) },
+			{"ProductName", new Tuple<string, double, Aspose.Cells.Style>("產品名稱" , -1, null) },
+			{"ProductDesc", new Tuple<string, double, Aspose.Cells.Style>("產品描述" , -1, null) },
+			{"Units", new Tuple<string, double, Aspose.Cells.Style>("產品 庫存" , -1, null) },
+			{"CreDte", new Tuple<string, double, Aspose.Cells.Style>("日期" , 10, new Aspose.Cells.Style{ Number = 14 }) }
 		},
 		PageOrientation = PageOrientationType.Landscape,
 		IsTextWrapped = false,
-		PageScale = 90,
-		FontName = "Microsoft JhengHei Light"
+		PageScale = 80,
+		FontName = "標楷體",
+		HeaderHorizontalAlignment = TextAlignmentType.Center
 	};
 	var pdfStream = GenPDFFromDataTable(excelArg);
 	var fileNameWithoutExt = $"{Guid.NewGuid().ToString("N")}";
@@ -150,16 +155,17 @@ protected void btnGenPDFRepeatHorizontal_Click(object sender, EventArgs e)
 }
 ```
 
+
 產生出來的 PDF 如下圖，
 ![浮水印水平蓋滿一頁的PDF](https://github.com/rainmakerho/asposeExcel2PDF/blob/master/repeatPage.png)
 
 ### 參考資料
 
 [透過 Aspose 將 datatable 的資料轉出成有浮水印的 PDF 檔](https://rainmakerho.github.io/2018/07/03/2018022/)
-
 [Setting Page Options](https://docs.aspose.com/display/cellsnet/Setting+Page+Options)
-
 [Setting Headers and Footers](https://docs.aspose.com/display/cellsnet/Setting+Headers+and+Footers)
-
 [Aspose Stamps-Watermarks](https://github.com/aspose-pdf/Aspose.PDF-for-.NET/tree/master/Examples/CSharp/AsposePDF/Stamps-Watermarks)
+[Aspose Cells Style.Number Property](https://apireference.aspose.com/net/cells/aspose.cells/style/properties/number)
+[How to control and understand settings in the Format Cells dialog box in Excel](https://support.microsoft.com/en-us/help/264372/how-to-control-and-understand-settings-in-the-format-cells-dialog-box)
+[Column Number format to 4 decimal places](https://forum.aspose.com/t/column-number-format-to-4-decimal-places/41465)
 

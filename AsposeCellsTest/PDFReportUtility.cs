@@ -20,11 +20,14 @@ namespace AsposeCellsTest
         /// <summary>
         /// DataTable 轉到 Excel 的參數
         /// </summary>
+        /// <remarks>
+        /// 2018/07/16 欄位需要設定數值或是日期
+        /// </remarks>
         public struct ExportDataTable2ExcelArg
         {
             public DataTable dataSource;
-            //columnId, columnDisplayName, columnWidth
-            public Dictionary<string, Tuple<string, double>> ColumnInfos;
+            //columnId, columnDisplayName, columnWidth, cloumnStyle
+            public Dictionary<string, Tuple<string, double, Style>> ColumnInfos;
             //是否允許換行
             public bool IsTextWrapped;
             //字型名稱，如果不允許換行的話，autoFitColumns 會依字型去算寬度
@@ -42,9 +45,12 @@ namespace AsposeCellsTest
             public string FooterLeft;
             public string FooterCenter;
             public string FooterRight;
+            //欄位對齊方式
+            public TextAlignmentType HeaderHorizontalAlignment;
 
-   
         }
+
+         
 
         /// <summary>
         /// 浮水印設定參數
@@ -84,12 +90,13 @@ namespace AsposeCellsTest
         /// </summary>
         /// <param name="dt">datatable</param>
         /// <param name="columnInfos">item1:Column Name, item2:Column Width</param>
-        private static void ChangedDataTableColumnName(DataTable dt, Dictionary<string, Tuple<string, double>> columnInfos)
+        private static void ChangedDataTableColumnName(DataTable dt, Dictionary<string, Tuple<string, double, Style>> columnInfos)
         {
+            
             //change columnName 
             if (columnInfos != null)
             {
-                foreach (KeyValuePair<string, Tuple<string, double>> columnInfo in columnInfos)
+                foreach (KeyValuePair<string, Tuple<string, double, Style>> columnInfo in columnInfos)
                 {
                     if (dt.Columns[columnInfo.Key] != null)
                         dt.Columns[columnInfo.Key].ColumnName = columnInfo.Value.Item1;
@@ -102,18 +109,33 @@ namespace AsposeCellsTest
         /// </summary>
         /// <param name="sheet">綁定 DataTable 的 Worksheet </param>
         /// <param name="columnInfos">item1:Column Name, item2:Column Width</param>
-        private static void ChangedSheetColumnStyle(Worksheet sheet, Dictionary<string, Tuple<string, double>> columnInfos)
+        private static void ChangedSheetColumnStyle(Worksheet sheet, Dictionary<string, Tuple<string, double, Style>> columnInfos, TextAlignmentType headerHorizontalAlignment)
         {
             //change columnName 
             if (columnInfos != null)
             {
                 var columnIndex = 0;
-                foreach (KeyValuePair<string, Tuple<string, double>> columnInfo in columnInfos)
+                foreach (KeyValuePair<string, Tuple<string, double, Style>> columnInfo in columnInfos)
                 {
                     if (columnInfo.Value.Item2 > -1)
                     {
                         sheet.Cells.SetColumnWidth(columnIndex, columnInfo.Value.Item2);
                     }
+
+                    if(columnInfo.Value.Item3 != null)
+                    {
+                        var styleFlag = new StyleFlag();
+                        styleFlag.NumberFormat = true;
+                        styleFlag.HorizontalAlignment = true;
+                        sheet.Cells.Columns[columnIndex].ApplyStyle(columnInfo.Value.Item3, styleFlag);
+                    }
+
+                    //設定 header 列
+                    var cellStyle = sheet.Cells[columnIndex, 0].GetStyle();
+                    var cellStyleFlag = new StyleFlag();
+                    cellStyleFlag.HorizontalAlignment = true;
+                    cellStyle.HorizontalAlignment = headerHorizontalAlignment;
+                    sheet.Cells[0, columnIndex].SetStyle(cellStyle, cellStyleFlag);
                     columnIndex++;
                 }
             }
@@ -189,7 +211,7 @@ namespace AsposeCellsTest
             range.SetStyle(style);
             worksheet.AutoFitColumns();
             //adjust columns
-            ChangedSheetColumnStyle(worksheet, arg.ColumnInfos);
+            ChangedSheetColumnStyle(worksheet, arg.ColumnInfos, arg.HeaderHorizontalAlignment);
             worksheet.AutoFitRows();
             //string xlsFile = Path.Combine(HttpContext.Current.Server.MapPath("./data"), $"test.xlsx");
             //workbook.Save(xlsFile, Aspose.Cells.SaveFormat.Xlsx);

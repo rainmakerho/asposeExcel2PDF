@@ -1,6 +1,7 @@
 ﻿using Aspose.Cells;
 using Aspose.Pdf;
 using Aspose.Pdf.Facades;
+using Aspose.Pdf.Text;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -263,8 +264,10 @@ namespace AsposeCellsTest
         /// <param name="arg"></param>
         private static void AddWatermarkFitPage(Aspose.Pdf.Page pdfPage, WatermarkArg arg)
         {
-            var text = new FormattedText(arg.Watermark);
-            var stamp = new TextStamp(text);
+            //var text = new FormattedText(arg.Watermark);
+            var defaultTextState = new TextState("MingLiU");
+            var stamp = new TextStamp(arg.Watermark, defaultTextState);
+            
             stamp.RotateAngle = arg.RotateAngle;
             stamp.XIndent = arg.WatermarkHorizontalSpace;
             stamp.YIndent = arg.WatermarkVerticalSpace;
@@ -290,7 +293,7 @@ namespace AsposeCellsTest
             if (arg.WatermarkWidth < minValue)
                 throw new ArgumentException($"{nameof(arg.WatermarkWidth)} must greater than {minValue}");
 
-            var text = new FormattedText(arg.Watermark);
+            //var text = new FormattedText(arg.Watermark);
             var yIndent = pdfPage.CropBox.Height - arg.WatermarkHeight;
             var yLimit = 0 - (arg.WatermarkHeight + arg.WatermarkVerticalSpace);
             var pageWidth = pdfPage.CropBox.Width;
@@ -299,7 +302,8 @@ namespace AsposeCellsTest
             {
                 while (xIndent < pageWidth)
                 {
-                    var stamp = new TextStamp(text);
+                    var defaultTextState = new TextState("MingLiU");
+                    var stamp = new TextStamp(arg.Watermark, defaultTextState);
                     stamp.RotateAngle = arg.RotateAngle;
                     stamp.XIndent = xIndent;
                     stamp.YIndent = yIndent;
@@ -382,6 +386,54 @@ namespace AsposeCellsTest
             }
         }
 
+
+
+        public static MemoryStream AddFooterAndWatermark(MemoryStream pdfStream, WatermarkArg arg)
+        {
+
+            var pdfDocument = new Aspose.Pdf.Document(pdfStream);
+            var pdfLastPage = pdfDocument.Pages[pdfDocument.Pages.Count];
+            var footer = new Aspose.Pdf.HeaderFooter();
+            //Instantiate a table object
+            Aspose.Pdf.Table tab1 = new Aspose.Pdf.Table();
+            tab1.HorizontalAlignment = HorizontalAlignment.Center;
+            //設定預設的文字格式
+            var defaultTextState = new TextState("MingLiU", 8);
+            footer.Paragraphs.Add(tab1);
+            tab1.DefaultColumnWidth = "180";
+            tab1.DefaultCellTextState = defaultTextState;
+            //Create rows in the table and then cells in the rows
+            var row1 = tab1.Rows.Add();
+            var cellL = row1.Cells.Add("信用資訊查詢主管");
+            //cellL.DefaultCellTextState = defaultTextState;
+            cellL.Alignment = HorizontalAlignment.Left;
+            var cellR = row1.Cells.Add("經辦");
+            cellR.Alignment = HorizontalAlignment.Right;
+            pdfLastPage.Footer = footer;
+
+            if (!string.IsNullOrWhiteSpace(arg.Watermark))
+            {
+                var text = new FormattedText(arg.Watermark);
+                foreach (var page in pdfDocument.Pages)
+                {
+                    switch (arg.WMStyle)
+                    {
+                        case WatermarkStyle.FitPage:
+                            AddWatermarkFitPage(page, arg);
+                            break;
+                        case WatermarkStyle.RepeatHorizontal:
+                            AddWatermarkRepeatHorizontal(page, arg);
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+            var newPdfStream = new MemoryStream();
+            pdfDocument.Save(newPdfStream);
+            return newPdfStream;
+        }
 
     }
 

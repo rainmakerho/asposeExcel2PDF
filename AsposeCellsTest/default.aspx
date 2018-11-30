@@ -11,10 +11,12 @@
         <div>
             <asp:Button ID="btnGenPDF" runat="server" Text="產生PDF" OnClick="btnGenPDF_Click" />
             <asp:GridView ID="GridView1" runat="server" AllowPaging="true" OnPageIndexChanging="GridView1_PageIndexChanging"></asp:GridView>
-            <hr />
+            <hr>
              <asp:Button ID="btnGenPDFFitPage" runat="server" Text="Watermark FitPage" OnClick="btnGenPDFFitPage_Click" />
             <asp:Button ID="btnGenPDFRepeatHorizontal" runat="server" Text="Watermark RepeatHorizontal" OnClick="btnGenPDFRepeatHorizontal_Click" />
-
+            <hr>
+             <asp:Button ID="btnFooter" runat="server" Text="Footer" OnClick="btnFooter_Click" />
+           
         </div>
     </form>
 </body>

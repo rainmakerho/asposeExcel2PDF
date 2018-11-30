@@ -134,7 +134,7 @@ namespace AsposeCellsTest
             dataTable.Columns.Add("Units", typeof(Double));
             dataTable.Columns.Add("CreDte", typeof(DateTime));
             var rand = new Random();
-            for (var i = 0; i < 90; i++)
+            for (var i = 0; i < 6; i++)
             {
                 dataTable.Rows.Add(i, $"產品名稱-{i} 讓產品名稱自己說話 abc {i} ...{i}", $"產品描述 -{i}塑造出帶有「情感」的品牌概念 -{i}產品描述 -產品描述 -產品描述 -", rand.NextDouble(), DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"));
             }
@@ -284,5 +284,59 @@ namespace AsposeCellsTest
             Response.End();
         }
 
+        protected void btnFooter_Click(object sender, EventArgs e)
+        {
+
+            var excelArg = new ExportDataTable2ExcelArg
+            {
+                dataSource = GetDataSource(),
+                HeaderCenter = "&24 This is Report Header ...",
+                HeaderRight = $"&12 使用者:Rainmaker\r日期:{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}",
+                FooterRight = "&10 &P/&N",
+                ColumnInfos = new Dictionary<string, Tuple<string, double, Aspose.Cells.Style>>
+                {
+                    {"ProductID", new Tuple<string, double, Aspose.Cells.Style>($"產品代號", -1, null) },
+                    {"ProductName", new Tuple<string, double, Aspose.Cells.Style>("產品名稱" , -1, null) },
+                    {"ProductDesc", new Tuple<string, double, Aspose.Cells.Style>("產品描述" , -1, null) },
+                    {"Units", new Tuple<string, double, Aspose.Cells.Style>("產品 庫存" , -1, null) },
+                    {"CreDte", new Tuple<string, double, Aspose.Cells.Style>("日期" , 10, new Aspose.Cells.Style{ Number = 14 }) }
+                },
+                PageOrientation = PageOrientationType.Landscape,
+                IsTextWrapped = false,
+                PageScale = 80,
+                FontName = "標楷體",
+                HeaderHorizontalAlignment = TextAlignmentType.Center
+            };
+            var pdfStream = GenPDFFromDataTable(excelArg);
+            var fileNameWithoutExt = $"{Guid.NewGuid().ToString("N")}";
+            //string pdfFileName = Path.Combine(Server.MapPath("./data"), $"{fileNameWithoutExt}_temp.pdf");
+            //using (FileStream file = new FileStream(pdfFileName, FileMode.Create, System.IO.FileAccess.Write))
+            //    pdfStream.CopyTo(file);
+
+            var watermarkArg = new WatermarkArg
+            {
+                Watermark = $"* 使用者:亂馬客  *{Environment.NewLine}{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}",
+                WMStyle = WatermarkStyle.RepeatHorizontal,
+                WatermarkHeight = 100,
+                WatermarkWidth = 130,
+                WatermarkHorizontalSpace = 50,
+                WatermarkVerticalSpace = 30,
+                RotateAngle = 30,
+                Opacity = .1
+
+            };
+            var waterStream = AddFooterAndWatermark(pdfStream, watermarkArg);
+            //string watermarkFileName = Path.Combine(Server.MapPath("./data"), $"{fileNameWithoutExt}.pdf");
+            //using (FileStream file = new FileStream(watermarkFileName, FileMode.Create, System.IO.FileAccess.Write))
+            //    waterStream.CopyTo(file);
+            Response.ContentType = "application/pdf";
+            Response.AddHeader("content-disposition", "attachment; filename=" + $"{fileNameWithoutExt}.pdf");
+            var fileSize = waterStream.Length;
+            byte[] pdfBuffer = new byte[(int)fileSize];
+            waterStream.Read(pdfBuffer, 0, (int)fileSize);
+            waterStream.Close();
+            Response.BinaryWrite(pdfBuffer);
+            Response.End();
+        }
     }
 }
